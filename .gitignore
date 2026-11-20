@@ -5,3 +5,5 @@ __pycache__/
 lake/
 export/
 .pytest_cache/
+s3store/.env
+s3store/s3.json

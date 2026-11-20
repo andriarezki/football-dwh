@@ -1,0 +1,14 @@
+# S3-compatible object storage (SeaweedFS) on the VPS, no cloud bill. S3 API bound to localhost only.
+# Create .env (AWS_* variables) and s3.json (see s3.json.template) before starting; both are git-ignored.
+services:
+  s3:
+    image: chrislusf/seaweedfs:latest
+    command: server -s3 -s3.config=/etc/s3.json -dir=/data -ip.bind=0.0.0.0
+    ports: ["127.0.0.1:8333:8333"]
+    volumes:
+      - ./s3.json:/etc/s3.json:ro
+      - s3-data:/data
+    mem_limit: 512m
+    restart: unless-stopped
+volumes:
+  s3-data:

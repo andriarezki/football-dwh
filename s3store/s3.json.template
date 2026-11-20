@@ -1,0 +1,1 @@
+{"identities":[{"name":"pipeline","credentials":[{"accessKey":"__AK__","secretKey":"__SK__"}],"actions":["Admin","Read","Write","List"]}]}

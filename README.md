@@ -37,8 +37,17 @@ cd airflow && docker compose up -d   # DAG appears after ~1 minute; unpause it i
 `python -m pipeline.s3_publish <bucket>` uploads the raw zone and curated Parquet (one folder per table);
 `sql/athena_tables.sql` exposes them to Amazon Athena.
 
+### Zero-cost S3 on a VPS
+`s3store/` runs SeaweedFS (S3-compatible, localhost only) in Docker, so the S3 code path is exercised for real without a cloud bill:
+```bash
+cd s3store && cp s3.json.template s3.json   # edit keys; put the same keys in .env (AWS_* variables, AWS_ENDPOINT_URL=http://127.0.0.1:8333)
+docker compose up -d && cd .. && set -a && . s3store/.env && set +a
+python -m pipeline.s3_publish football-lake      # create the bucket first (boto3 create_bucket)
+python scripts/query_s3.py                       # Athena-style SQL over the Parquet in S3
+```
+
 ## Honest scope
 - Core pipeline and Airflow DAG are tested and run on DuckDB locally.
-- The S3 publisher is covered by unit tests with a mocked S3 (moto). It has NOT been run against a real AWS account,
-  and nothing here runs on Microsoft Fabric. Athena DDL is untested on real Athena.
+- The S3 publisher is unit-tested with a mocked S3 (moto) and was run end to end against a real S3-compatible server (SeaweedFS).
+  It has NOT been run on AWS itself, nothing here runs on Microsoft Fabric, and the Athena DDL is untested on real Athena.
 - Data: football-data.co.uk (free for personal and research use; check their terms before commercial use).
