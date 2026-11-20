@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Football DWH · live demo</title>
+<style>
+:root{--bg:#0f172a;--fg:#e2e8f0;--mut:#94a3b8;--card:#1e293b;--line:#334155;--ok:#34d399;--bad:#f87171;--acc:#38bdf8}
+@media(prefers-color-scheme:light){:root{--bg:#f8fafc;--fg:#0f172a;--mut:#475569;--card:#fff;--line:#e2e8f0;--ok:#047857;--bad:#b91c1c;--acc:#0369a1}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 48px}h1{font-size:1.5rem;margin:.2rem 0}h2{font-size:1.05rem;margin:0 0 .6rem}
+p.s{color:var(--mut);margin:.2rem 0 1rem}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child,td.l,th.l{text-align:left}
+th{color:var(--mut);font-weight:600}.ok{color:var(--ok)}.bad{color:var(--bad)}select{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.85rem}.flow span{border:1px solid var(--line);border-radius:6px;padding:4px 8px}.flow b{color:var(--mut)}
+.bar{display:flex;height:14px;border-radius:4px;overflow:hidden;min-width:140px}.bar i{display:block}a{color:var(--acc)}.kpi{display:flex;gap:18px;flex-wrap:wrap}.kpi div b{display:block;font-size:1.4rem}
+</style></head><body><main>
+<h1>Football DWH · live demo</h1>
+<p class="s">A small data warehouse built from Premier League results. Data tampil di sini dibaca langsung dari hasil pipeline (DuckDB), bukan angka manual. <a href="https://github.com/andriarezki/football-dwh">Source code</a></p>
+<div class="card"><h2>Pipeline</h2><div class="flow"><span>CSV source</span><b>→</b><span>Data lake (partitioned)</span><b>→</b><span>Staging</span><b>→</b><span>Star schema</span><b>→</b><span>Marts</span><b>→</b><span>10 quality checks</span><b>→</b><span>Parquet / S3</span></div>
+<p class="s" style="margin-top:10px">Scheduled daily with Airflow. Quality gate: if any check fails, the pipeline stops and nothing is exported.</p></div>
+<div class="card"><div class="kpi" id="kpi"></div></div>
+<div class="card"><h2>League table</h2><select id="sel"></select><div style="margin-top:10px"><table id="tbl"></table></div></div>
+<div class="card"><h2>Season summary (home advantage)</h2><table id="sum"></table></div>
+<div class="card"><h2>Data-quality checks (last run)</h2><table id="dq"></table></div>
+<p class="s">Data: football-data.co.uk. Runs on DuckDB; S3 step verified on an S3-compatible server, not on AWS.</p>
+</main><script>
+const D=/*DATA*/null;const $=s=>document.querySelector(s);
+$('#kpi').innerHTML=`<div><b>${D.counts[0]}</b>matches</div><div><b>${D.counts[1]}</b>teams</div><div><b>${D.counts[2]}</b>seasons</div><div><b class="${D.dq.every(r=>r[1]==0)?'ok':'bad'}">${D.dq.filter(r=>r[1]==0).length}/${D.dq.length}</b>checks passed</div>`;
+const seasons=[...new Set(D.table.map(r=>r[0]))];$('#sel').innerHTML=seasons.map(s=>`<option>${s}</option>`).join('');
+function draw(){const s=$('#sel').value;$('#tbl').innerHTML='<tr><th>#</th><th class="l">Team</th><th>P</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>'+D.table.filter(r=>r[0]==s).map(r=>`<tr><td>${r[1]}</td><td class="l">${r[2]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td><td><b>${r[4]}</b></td></tr>`).join('')}
+$('#sel').value=seasons[seasons.length-2]||seasons[0];$('#sel').onchange=draw;draw();
+$('#sum').innerHTML='<tr><th>Season</th><th>Matches</th><th>Goals/match</th><th class="l">Home / Draw / Away %</th></tr>'+D.summary.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="l"><div class="bar" title="${r[3]} / ${r[4]} / ${r[5]}"><i style="width:${r[3]}%;background:var(--acc)"></i><i style="width:${r[4]}%;background:var(--mut)"></i><i style="width:${r[5]}%;background:var(--ok)"></i></div> ${r[3]} / ${r[4]} / ${r[5]}</td></tr>`).join('');
+$('#dq').innerHTML='<tr><th class="l">Check</th><th>Failed rows</th><th>Status</th><th>Run at (UTC)</th></tr>'+D.dq.map(r=>`<tr><td class="l">${r[0]}</td><td>${r[1]}</td><td class="${r[1]==0?'ok':'bad'}">${r[1]==0?'OK':'FAIL'}</td><td>${r[2]}</td></tr>`).join('');
+</script></body></html>

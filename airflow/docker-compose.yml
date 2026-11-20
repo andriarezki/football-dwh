@@ -8,6 +8,8 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
       _PIP_ADDITIONAL_REQUIREMENTS: "duckdb"
+      AIRFLOW__WEBSERVER__BASE_URL: "https://andriarezki.tech/dwh/airflow"
+      AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: "True"
     volumes:
       - ./dags:/opt/airflow/dags
       - ..:/opt/football-dwh:ro
