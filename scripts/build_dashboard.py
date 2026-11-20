@@ -13,5 +13,7 @@ data = {
     "counts": q("SELECT (SELECT count(*) FROM fact_match), (SELECT count(*) FROM dim_team), (SELECT count(*) FROM dim_season)")[0],
 }
 tpl = Path("web/template.html").read_text()
-Path("web/index.html").write_text(tpl.replace("/*DATA*/null", json.dumps(data)))
+# escape HTML-significant characters so data can never break out of the inline <script>
+payload = json.dumps(data).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+Path("web/index.html").write_text(tpl.replace("/*DATA*/null", payload))
 print("built web/index.html", len(data["table"]), "table rows")
