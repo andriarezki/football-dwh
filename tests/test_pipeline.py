@@ -9,14 +9,14 @@ def con(tmp_path_factory):
     return duckdb.connect(db, read_only=True)
 
 def test_fact_grain_one_row_per_match(con):
-    assert con.sql("select count(*) - count(distinct match_key) from fact_match").fetchone()[0] == 0
+    assert con.execute("select count(*) - count(distinct match_key) from fact_match").fetchone()[0] == 0
 
 def test_champions_points_known_values(con):
     rows = dict(con.sql("select season_label, points from mart_team_season where position=1").fetchall())
     assert rows["2019/20"] == 99 and rows["2020/21"] == 86 and rows["2021/22"] == 93
 
 def test_every_complete_season_has_380_matches(con):
-    n = con.sql("select matches from mart_season_summary where season_label='2022/23'").fetchone()[0]
+    n = con.execute("select matches from mart_season_summary where season_label='2022/23'").fetchone()[0]
     assert n == 380
 
 def test_quality_checks_detect_bad_data():
