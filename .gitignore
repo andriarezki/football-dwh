@@ -1,0 +1,7 @@
+.deps/
+__pycache__/
+*.duckdb
+*.duckdb.wal
+lake/
+export/
+.pytest_cache/
