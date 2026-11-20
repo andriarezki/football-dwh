@@ -12,7 +12,7 @@ def test_fact_grain_one_row_per_match(con):
     assert con.execute("select count(*) - count(distinct match_key) from fact_match").fetchone()[0] == 0
 
 def test_champions_points_known_values(con):
-    rows = dict(con.sql("select season_label, points from mart_team_season where position=1").fetchall())
+    rows = dict(con.execute("select season_label, points from mart_team_season where position=1").fetchall())
     assert rows["2019/20"] == 99 and rows["2020/21"] == 86 and rows["2021/22"] == 93
 
 def test_every_complete_season_has_380_matches(con):
