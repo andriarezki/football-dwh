@@ -24,8 +24,21 @@ pytest -q                     # tests incl. known champions' points (Liverpool 9
 - Idempotent extract using SHA-256 manifest; partitioned lake layout
 - Data quality as code: uniqueness, null, range, result-vs-goals consistency, foreign keys, row-count reconciliation, season completeness
 - Tests that verify both the business numbers and that the quality checks really catch bad data
-- CI with GitHub Actions; Parquet export
+- Orchestration with Airflow, CI with GitHub Actions, Parquet export
+
+## Orchestration (Airflow)
+`airflow/` has a single-container Airflow (Docker, UI on localhost only) and the DAG `football_dwh_daily`
+(03:00 daily, 2 retries): `extract >> transform_and_quality_gate`. Verified on a small VPS: scheduled and manual runs succeeded.
+```bash
+cd airflow && docker compose up -d   # DAG appears after ~1 minute; unpause it in the UI or CLI
+```
+
+## S3 / Athena
+`python -m pipeline.s3_publish <bucket>` uploads the raw zone and curated Parquet (one folder per table);
+`sql/athena_tables.sql` exposes them to Amazon Athena.
 
 ## Honest scope
-Runs locally on DuckDB. It is not deployed on AWS or Microsoft Fabric. The lake layout uses S3-style keys so the
-extract and load steps can be pointed at S3 later (planned: S3 + Athena/Glue version). No Airflow yet (planned).
+- Core pipeline and Airflow DAG are tested and run on DuckDB locally.
+- The S3 publisher is covered by unit tests with a mocked S3 (moto). It has NOT been run against a real AWS account,
+  and nothing here runs on Microsoft Fabric. Athena DDL is untested on real Athena.
+- Data: football-data.co.uk (free for personal and research use; check their terms before commercial use).

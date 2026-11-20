@@ -27,3 +27,16 @@ def test_quality_checks_detect_bad_data():
     c.execute("create table dim_team as select 1 team_key")
     res = dict(quality.run(c))
     assert res["result_matches_goals"] == 1 and res["team_plays_itself"] == 1 and res["odds_above_one"] == 1 and res["fact_fk_teams"] == 1
+
+def test_s3_publish_uploads_raw_and_curated(con):
+    import boto3
+    from moto import mock_aws
+    from pipeline import s3_publish
+    with mock_aws():
+        s3 = boto3.client("s3", region_name="us-east-1")
+        s3.create_bucket(Bucket="lake")
+        keys = s3_publish.publish("lake", s3=s3)
+        listed = {o["Key"] for o in s3.list_objects_v2(Bucket="lake")["Contents"]}
+        assert set(keys) == listed
+        assert any(k == "football-dwh/curated/mart_team_season/mart_team_season.parquet" for k in listed)
+        assert any("/raw/season=1920/" in k for k in listed)
